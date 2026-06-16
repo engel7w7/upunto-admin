@@ -24,6 +24,10 @@ interface CentroAcademico {
   id: string;
   nombre: string;
   detalles: string;
+  descripcion?: string;
+  especialidad?: string; 
+  horario_semana?: string; 
+  ubicacion_detalle?: string;
   imagen_url?: string;
   latitud: number;
   longitud: number;
@@ -39,7 +43,6 @@ export default function DashboardAdmin() {
   const [seccionActual, setSeccionActual] = useState<SeccionModulo>("fotocopias");
   const [estaCargando, setEstaCargando] = useState<boolean>(true);
   
-  // Nuevo estado para el menú responsivo en móviles
   const [menuMovilAbierto, setMenuMovilAbierto] = useState<boolean>(false);
 
   const [tiendas, setTiendas] = useState<Fotocopiadora[]>([]);
@@ -59,6 +62,10 @@ export default function DashboardAdmin() {
   const [inputLongitud, setInputLongitud] = useState("");
   const [inputDisponible, setInputDisponible] = useState(true);
   const [inputMetadata, setInputMetadata] = useState("");
+  
+  const [inputEspecialidad, setInputEspecialidad] = useState("");
+  const [inputHorario, setInputHorario] = useState("");
+  const [inputUbicacionDetalle, setInputUbicacionDetalle] = useState("");
 
   useEffect(() => {
     const desvincularAuth = auth.onAuthStateChanged((usuario) => {
@@ -101,7 +108,8 @@ export default function DashboardAdmin() {
       else if ("titulo" in elemento && elemento.titulo) setInputNombre(elemento.titulo);
       else setInputNombre("");
 
-      if ("detalles" in elemento && elemento.detalles) setInputDetalles(elemento.detalles);
+      if ("descripcion" in elemento && elemento.descripcion) setInputDetalles(elemento.descripcion);
+      else if ("detalles" in elemento && elemento.detalles) setInputDetalles(elemento.detalles);
       else if ("ubicacion_detalle" in elemento && elemento.ubicacion_detalle) setInputDetalles(elemento.ubicacion_detalle);
       else setInputDetalles("");
 
@@ -119,6 +127,16 @@ export default function DashboardAdmin() {
       if ("precio_promedio" in elemento && elemento.precio_promedio) setInputMetadata(String(elemento.precio_promedio));
       else if ("salas_disponibles" in elemento && elemento.salas_disponibles) setInputMetadata(String(elemento.salas_disponibles));
       else setInputMetadata("");
+
+      // Mapeo de campos condicionales de salud para edición
+      if ("especialidad" in elemento && elemento.especialidad) setInputEspecialidad(elemento.especialidad);
+      else setInputEspecialidad("");
+
+      if ("horario_semana" in elemento && elemento.horario_semana) setInputHorario(elemento.horario_semana);
+      else setInputHorario("");
+
+      if ("ubicacion_detalle" in elemento && elemento.ubicacion_detalle) setInputUbicacionDetalle(elemento.ubicacion_detalle);
+      else setInputUbicacionDetalle("");
     } else {
       setInputNombre("");
       setInputDetalles("");
@@ -127,6 +145,9 @@ export default function DashboardAdmin() {
       setInputLongitud("");
       setInputDisponible(true);
       setInputMetadata("");
+      setInputEspecialidad("");
+      setInputHorario("");
+      setInputUbicacionDetalle("");
     }
     setModalAbierto(true);
   };
@@ -153,13 +174,22 @@ export default function DashboardAdmin() {
       const path = seccionActual === "salud" ? "centros_salud" : seccionActual;
       referenciaColeccion = collection(db, path);
       datosEnvio.nombre = inputNombre;
-      datosEnvio.detalles = inputDetalles;
       datosEnvio.imagen_url = inputImagenUrl;
       datosEnvio.latitud = parseFloat(inputLatitud) || 0;
       datosEnvio.longitud = parseFloat(inputLongitud) || 0;
 
-      if (seccionActual === "pensiones") datosEnvio.precio_promedio = inputMetadata;
-      if (seccionActual === "bibliotecas") datosEnvio.salas_disponibles = inputMetadata;
+      if (seccionActual === "salud") {
+        // Estructura exacta requerida para salud según Firestore
+        datosEnvio.descripcion = inputDetalles;
+        datosEnvio.detalles = inputDetalles; // Mantenido para consistencia interna
+        datosEnvio.especialidad = inputEspecialidad;
+        datosEnvio.horario_semana = inputHorario;
+        datosEnvio.ubicacion_detalle = inputUbicacionDetalle;
+      } else {
+        datosEnvio.detalles = inputDetalles;
+        if (seccionActual === "pensiones") datosEnvio.precio_promedio = inputMetadata;
+        if (seccionActual === "bibliotecas") datosEnvio.salas_disponibles = inputMetadata;
+      }
     }
 
     try {
@@ -221,7 +251,6 @@ export default function DashboardAdmin() {
               <h2 className="text-xl font-bold text-white tracking-tight">U-PUNTO SUCRE</h2>
               <p className="text-xs text-blue-400 mt-1 font-medium">Consola de Administración</p>
             </div>
-            {/* Botón cerrar solo visible en móviles */}
             <button 
               onClick={() => setMenuMovilAbierto(false)}
               className="md:hidden text-slate-400 hover:text-white"
@@ -263,7 +292,6 @@ export default function DashboardAdmin() {
         <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8 pb-5 border-b border-slate-200">
           
           <div className="flex items-center gap-3">
-            {/* BOTÓN HAMBURGUESA PARA MÓVILES */}
             <button 
               onClick={() => setMenuMovilAbierto(true)}
               className="md:hidden p-2.5 bg-white rounded-lg border border-slate-200 text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -350,7 +378,8 @@ export default function DashboardAdmin() {
                       <td className="p-4 text-slate-500 max-w-[200px] truncate">
                         {seccionActual === "pensiones" && `Precio: ${c.precio_promedio || "N/D"} | `}
                         {seccionActual === "bibliotecas" && `Capacidad: ${c.salas_disponibles || "N/D"} | `}
-                        {c.detalles}
+                        {seccionActual === "salud" && `Horario: ${c.horario_semana || "N/D"} | `}
+                        {c.descripcion || c.detalles || "Sin descripción"}
                       </td>
                       <td className="p-4 text-center flex justify-center gap-2">
                         <button onClick={() => configurarFormulario("general", c)} className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300 transition">Editar</button>
@@ -388,7 +417,9 @@ export default function DashboardAdmin() {
               {tipoFormulario !== "libro" && (
                 <>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Descripción o Ubicación</label>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
+                      {seccionActual === "salud" ? "Atención / Descripción Funcional" : "Descripción o Ubicación"}
+                    </label>
                     <textarea
                       rows={2} required
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
@@ -403,6 +434,37 @@ export default function DashboardAdmin() {
                       value={inputImagenUrl} onChange={(e) => setInputImagenUrl(e.target.value)}
                     />
                   </div>
+                  
+                  {/* Campos específicos e independientes para el módulo de Salud */}
+                  {seccionActual === "salud" && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Especialidad Clínica (Ej: Varias, Odontología)</label>
+                        <input
+                          type="text" required
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                          value={inputEspecialidad} onChange={(e) => setInputEspecialidad(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Horario de Atención Semanal</label>
+                        <input
+                          type="text" required
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                          value={inputHorario} onChange={(e) => setInputHorario(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Dirección / Ubicación Detallada</label>
+                        <input
+                          type="text" required
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                          value={inputUbicacionDetalle} onChange={(e) => setInputUbicacionDetalle(e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
+
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Latitud Decimal</label>
