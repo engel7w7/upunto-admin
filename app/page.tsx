@@ -42,7 +42,7 @@ export default function Login() {
       <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full border border-slate-100">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold text-slate-900">U-Punto Admin</h1>
-          <p className="text-slate-500 mt-2 text-sm">Panel de Gestión de Datos</p>
+          <p className="text-slate-500 mt-2 text-sm">Panel de Gestión de Datos Romero Morales Jhojan Erick</p>
         </div>
 
         {error && (

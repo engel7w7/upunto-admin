@@ -249,7 +249,7 @@ export default function DashboardAdmin() {
           <div className="mb-10 text-center flex items-center justify-between md:block">
             <div className="w-full">
               <h2 className="text-xl font-bold text-white tracking-tight">U-PUNTO SUCRE</h2>
-              <p className="text-xs text-blue-400 mt-1 font-medium">Consola de Administración</p>
+              <p className="text-xs text-blue-400 mt-1 font-medium">Consola de Administración Romero Morales Jhojan Erick</p>
             </div>
             <button 
               onClick={() => setMenuMovilAbierto(false)}
